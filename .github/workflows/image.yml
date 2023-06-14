@@ -32,9 +32,9 @@ jobs:
       - name: Set DOCKER_REPO_TAGGED based on branch or tag
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "DOCKER_REPO_TAGGED=ghcr.io/${{ secrets.REPOSITORY_OWNER }}/fastgpt:latest" >> $GITHUB_ENV
+            echo "DOCKER_REPO_TAGGED=ghcr.io/${{ github.repository_owner }}/fastgpt:latest" >> $GITHUB_ENV
           else
-            echo "DOCKER_REPO_TAGGED=ghcr.io/${{ secrets.REPOSITORY_OWNER }}/fastgpt:${{ github.ref_name }}" >> $GITHUB_ENV
+            echo "DOCKER_REPO_TAGGED=ghcr.io/${{ github.repository_owner }}/fastgpt:${{ github.ref_name }}" >> $GITHUB_ENV
           fi
 
       - name: Build and publish image for main branch or tag push event
