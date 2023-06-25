@@ -43,13 +43,13 @@ import { fileDownload } from '@/utils/file';
 import { htmlTemplate } from '@/constants/common';
 import { useUserStore } from '@/store/user';
 import Loading from '@/components/Loading';
-import Markdown from '@/components/Markdown';
 import SideBar from '@/components/SideBar';
 import Avatar from '@/components/Avatar';
 import Empty from './components/Empty';
 import QuoteModal from './components/QuoteModal';
 import { HUMAN_ICON } from '@/constants/chat';
 
+const Markdown = dynamic(async () => await import('@/components/Markdown'));
 const PhoneSliderBar = dynamic(() => import('./components/PhoneSliderBar'), {
   ssr: false
 });
@@ -174,7 +174,7 @@ const Chat = ({ modelId, chatId }: { modelId: string; chatId: string }) => {
       const messages = adaptChatItem_openAI({ messages: prompts, reserveId: true });
 
       // 流请求，获取数据
-      const { newChatId, quoteLen } = await streamFetch({
+      const { newChatId, quoteLen, errMsg } = await streamFetch({
         data: {
           messages,
           chatId,
@@ -219,7 +219,9 @@ const Chat = ({ modelId, chatId }: { modelId: string; chatId: string }) => {
             ...item,
             status: 'finish',
             quoteLen,
-            systemPrompt: chatData.systemPrompt
+            systemPrompt: `${chatData.systemPrompt}${`${
+              chatData.limitPrompt ? `\n\n${chatData.limitPrompt}` : ''
+            }`}`
           };
         })
       }));
@@ -230,17 +232,26 @@ const Chat = ({ modelId, chatId }: { modelId: string; chatId: string }) => {
         loadHistory({ pageNum: 1, init: true });
         loadMyModels(true);
       }, 100);
+
+      if (errMsg) {
+        toast({
+          status: 'warning',
+          title: errMsg
+        });
+      }
     },
     [
       chatId,
       modelId,
-      chatData.systemPrompt,
       setChatData,
-      loadHistory,
-      loadMyModels,
       generatingMessage,
       setForbidLoadChatData,
-      router
+      router,
+      chatData.systemPrompt,
+      chatData.limitPrompt,
+      loadHistory,
+      loadMyModels,
+      toast
     ]
   );
 
@@ -736,7 +747,6 @@ const Chat = ({ modelId, chatId }: { modelId: string; chatId: string }) => {
                           <Markdown
                             source={item.value}
                             isChatting={isChatting && index === chatData.history.length - 1}
-                            formatLink
                           />
                           <Flex>
                             {!!item.systemPrompt && (
@@ -750,7 +760,7 @@ const Chat = ({ modelId, chatId }: { modelId: string; chatId: string }) => {
                                 px={[2, 4]}
                                 onClick={() => setShowSystemPrompt(item.systemPrompt || '')}
                               >
-                                提示词
+                                提示词 & 限定词
                               </Button>
                             )}
                             {!!item.quoteLen && (
