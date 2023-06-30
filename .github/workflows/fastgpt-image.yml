@@ -1,4 +1,4 @@
-name: Build images and copy image to docker
+name: Build fastgpt images and copy image to docker hub
 on:
   workflow_dispatch:
   push:
@@ -7,7 +7,7 @@ on:
     tags:
       - 'v*.*.*'
 jobs:
-  build-images:
+  build-fastgpt-images:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
